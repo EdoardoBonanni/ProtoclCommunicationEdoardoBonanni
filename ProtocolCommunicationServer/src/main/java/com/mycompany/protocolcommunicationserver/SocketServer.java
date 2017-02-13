@@ -28,28 +28,33 @@ public class SocketServer implements Communication {
     public SocketServer(int port) throws IOException{
         this.socketS = new ServerSocket(port);   
     }
+    
 
     @Override
     public boolean Connect() {
-        this(6789);
+        try{
+            this.socketS = new ServerSocket(6789);
             while(true){
-                try{
+                    socketS.setSoTimeout(10000);
                     //Si apre la socket del server
                     Socket connectionSocket = socketS.accept();
                     BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-                    DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());     
-                } catch (IOException ex) { }
+                    DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+                    return true;
             }
+        } catch (IOException ex) { }
+        return false;
     }
 
     @Override
     public boolean Send() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return true;
+        
     }
 
     @Override
     public boolean Receive() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return true;
     }
 
     @Override

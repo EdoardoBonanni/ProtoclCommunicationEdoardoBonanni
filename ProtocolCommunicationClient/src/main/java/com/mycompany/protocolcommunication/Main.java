@@ -5,6 +5,8 @@
  */
 package com.mycompany.protocolcommunication;
 
+import org.json.simple.JSONObject;
+
 /**
  *
  * @author Edoardo
@@ -15,7 +17,21 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        Communication c = new SocketClient("localhost", 6789);
+        Packer p = new ClientPacker();
+        while(!c.Connect());
+        JSONObject jsonObject = new JSONObject();
+        while(true){
+            jsonObject = (JSONObject) p.Upload(10, "Pippo", "blabla");
+            c.Send(jsonObject);
+            jsonObject.clear();
+            jsonObject = (JSONObject) c.Receive();
+            String s = (String) jsonObject.get("Test");
+            if(s != null)
+                System.out.println(s);
+            while(!c.Close());
+            break;
+        }
     }
     
 }

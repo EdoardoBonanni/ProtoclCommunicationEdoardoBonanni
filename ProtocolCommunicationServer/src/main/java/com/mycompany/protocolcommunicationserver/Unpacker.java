@@ -3,19 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.mycompany.protocolcommunication;
+package com.mycompany.protocolcommunicationserver;
 
 /**
  *
  * @author Edoardo
  */
-public interface Communication {
+public interface Unpacker {
     
-    public boolean Connect();
+    public void Upload(Object packet);
     
-    public boolean Send(Object obj);
+    public void Send(Object packet);
     
-    public Object Receive();
-     
-    public boolean Close();
+    public void End(Object packet);
 }

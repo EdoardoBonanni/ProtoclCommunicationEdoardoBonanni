@@ -13,9 +13,9 @@ public interface Communication {
     
     public boolean Connect();
     
-    public boolean Send();
+    public boolean Send(Object obj);
     
-    public boolean Receive();
+    public Object Receive();
      
     public boolean Close();
 }

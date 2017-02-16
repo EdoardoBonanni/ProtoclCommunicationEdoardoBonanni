@@ -9,13 +9,11 @@ package com.mycompany.protocolcommunication;
  *
  * @author Edoardo
  */
-public interface Communication {
+public interface Packer {
     
-    public boolean Connect();
+    public Object Upload(Object N_SegTot, Object nome_file, Object MD5);
     
-    public boolean Send(Object obj);
+    public Object Send(Object N_Seg, Object buffer);
     
-    public Object Receive();
-     
-    public boolean Close();
+    public Object End(Object OpCode);
 }

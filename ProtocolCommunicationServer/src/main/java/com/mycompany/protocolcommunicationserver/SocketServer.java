@@ -11,11 +11,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -24,6 +21,9 @@ import org.json.simple.parser.ParseException;
 public class SocketServer implements Communication {
     
     private ServerSocket socketS;
+    private DataOutputStream outToClient;
+    private BufferedReader inFromClient;
+    private Socket connectionSocket;
     
     public SocketServer(int port) throws IOException{
         this.socketS = new ServerSocket(port);   
@@ -33,32 +33,44 @@ public class SocketServer implements Communication {
     @Override
     public boolean Connect() {
         try{
-            this.socketS = new ServerSocket(6789);
             while(true){
-                    socketS.setSoTimeout(10000);
                     //Si apre la socket del server
-                    Socket connectionSocket = socketS.accept();
-                    BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-                    DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+                    connectionSocket = socketS.accept();
+                    inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+                    outToClient = new DataOutputStream(connectionSocket.getOutputStream());
                     return true;
             }
-        } catch (IOException ex) { }
-        return false;
+        } catch (IOException ex) { return false; }
     }
 
     @Override
-    public boolean Send() {
-        return true;
-        
+    public boolean Send(Object obj) {
+        try {
+            outToClient.writeBytes(obj.toString() + '\n');
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
     }
-
+    
     @Override
-    public boolean Receive() {
-        return true;
+    public JSONObject Receive() {
+        try {
+            JSONParser jsonParser = new JSONParser();
+            JSONObject ClientJsonObject = (JSONObject) jsonParser.parse(inFromClient.readLine());
+            return ClientJsonObject;
+        } catch (Exception ex) {
+            return new JSONObject();
+        }
     }
 
     @Override
     public boolean Close() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            connectionSocket.close();
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
     }
 }

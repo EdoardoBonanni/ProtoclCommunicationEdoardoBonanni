@@ -16,15 +16,12 @@ import org.json.simple.JSONObject;
  */
 public class ClientPacker implements Packer{
     
-    /* MD5
-    byte[] TotalFileMD5;
-    try {
-        this.TotalFileMD5 = c;
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        byte[] thedigest = md.digest(TotalFileMD5);
-    } catch (NoSuchAlgorithmException ex) {
-        Logger.getLogger(ClientPacker.class.getName()).log(Level.SEVERE, null, ex);
-    }*/
+    private int Command;
+    private int OpCode;
+    private int Len_Buffer;
+    private byte[] Buffer;
+    //CheckSum array di byte
+    private byte[] CheckSum;
     
     public ClientPacker() {
     }
@@ -37,7 +34,7 @@ public class ClientPacker implements Packer{
         upload.put("OpCode", 0);
         buffer.put("N_SegTot", N_SegTot);
         buffer.put("nome_file", nome_file);
-        buffer.put("MD5", MD5);
+        buffer.put("MD5", new String((byte[]) MD5));
         upload.put("Len_Buffer", buffer.size());
         upload.put("Buffer", buffer);
         upload.put("CheckSum", "");
@@ -64,5 +61,37 @@ public class ClientPacker implements Packer{
         end.put("Buffer", "");
         end.put("CheckSum", "");
         return end;
+    }
+
+    @Override
+    public void Unpack(Object packet) {
+        JSONObject pack = (JSONObject) packet;
+        this.Command = ((Long) pack.get("Command")).intValue();
+        this.OpCode = ((Long) pack.get("OpCode")).intValue();
+        this.Len_Buffer = ((Long) pack.get("Len_Buffer")).intValue();
+        String buf = (String) pack.get("Buffer");
+        this.Buffer = buf.getBytes();
+        String check = (String) pack.get("CheckSum");
+        this.CheckSum = check.getBytes();
+    }
+
+    public int getCommand() {
+        return Command;
+    }
+
+    public int getOpCode() {
+        return OpCode;
+    }
+
+    public int getLen_Buffer() {
+        return Len_Buffer;
+    }
+
+    public byte[] getBuffer() {
+        return Buffer;
+    }
+
+    public byte[] getCheckSum() {
+        return CheckSum;
     }
 }

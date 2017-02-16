@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -58,7 +59,7 @@ public class SocketClient implements Communication {
             JSONParser jsonParser = new JSONParser();
             JSONObject ServerJsonObject = (JSONObject) jsonParser.parse(inServ.readLine());
             return ServerJsonObject;
-        } catch (Exception ex) {
+        } catch (IOException | ParseException ex){
             return new JSONObject();
         }
     }

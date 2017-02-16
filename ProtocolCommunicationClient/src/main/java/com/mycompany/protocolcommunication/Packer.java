@@ -16,4 +16,6 @@ public interface Packer {
     public Object Send(Object N_Seg, Object buffer);
     
     public Object End(Object OpCode);
+    
+    public void Unpack(Object packet);
 }

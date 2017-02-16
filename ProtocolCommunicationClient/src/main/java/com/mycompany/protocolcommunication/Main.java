@@ -5,6 +5,14 @@
  */
 package com.mycompany.protocolcommunication;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Base64;
 import org.json.simple.JSONObject;
 
 /**
@@ -16,20 +24,31 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
-        Communication c = new SocketClient("localhost", 6789);
-        Packer p = new ClientPacker();
-        while(!c.Connect());
+    public static void main(String[] args) throws IOException {
+        Communication comm = new SocketClient("localhost", 6789);
+        ClientPacker packer = new ClientPacker();
+        SendFile file = new SendFile();
+        
+        while(!comm.Connect());
         JSONObject jsonObject = new JSONObject();
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        
         while(true){
-            jsonObject = (JSONObject) p.Upload(10, "Pippo", "blabla");
-            c.Send(jsonObject);
+            System.out.println("Inserire il path dell'immagine da inviare ");
+            String imagePath = input.readLine();
+
+            System.out.println("Inserire nome del file");
+            String nome_file = input.readLine();
+            
+            file.CheckFile(imagePath);
+            
+            jsonObject = (JSONObject) packer.Upload(file.getTotSeg(), nome_file, file.getMD5());
+            comm.Send(jsonObject);
             jsonObject.clear();
-            jsonObject = (JSONObject) c.Receive();
-            String s = (String) jsonObject.get("Test");
-            if(s != null)
-                System.out.println(s);
-            while(!c.Close());
+            jsonObject = (JSONObject) comm.Receive();
+            packer.Unpack(jsonObject);
+            System.out.println(packer.getOpCode());
+            comm.Close();
             break;
         }
     }

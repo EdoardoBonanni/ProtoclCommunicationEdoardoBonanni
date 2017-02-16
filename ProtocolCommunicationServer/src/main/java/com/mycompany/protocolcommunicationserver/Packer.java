@@ -9,11 +9,11 @@ package com.mycompany.protocolcommunicationserver;
  *
  * @author Edoardo
  */
-public interface Unpacker {
+public interface Packer {
     
-    public void Upload(Object packet);
+    public Object Ack(Object N_Seg);
     
-    public void Send(Object packet);
+    public Object Nack(Object Error);
     
-    public void End(Object packet);
+    public void Unpack(Object packet);
 }

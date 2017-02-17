@@ -24,8 +24,7 @@ public class SendFile {
     public SendFile() {
     }
     
-    public void CheckFile(String imagePath){
-        File myFile = new File(imagePath);
+    public void CheckFile(File myFile){
         String imageDataString = "";
         byte imageData[] = null;
         try {            

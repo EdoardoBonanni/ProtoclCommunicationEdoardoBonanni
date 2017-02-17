@@ -5,6 +5,7 @@
  */
 package com.mycompany.protocolcommunicationserver;
 
+import java.nio.ByteBuffer;
 import org.json.simple.JSONObject;
 
 /**
@@ -15,13 +16,11 @@ public class ServerPacker implements Packer{
     
     private int TotSeg;
     private String nome_file;
-    //MD5 array di byte
     private byte[] MD5;
     private short Command;
     private int OpCode;
     private short Len_Buffer;
     private byte[] Buffer;
-    //CheckSum array di byte
     private byte[] CheckSum;
     
     public ServerPacker() {
@@ -30,17 +29,21 @@ public class ServerPacker implements Packer{
     @Override
     public void Unpack(Object packet){
         JSONObject pack = (JSONObject) packet;
-        this.Command = new Short((String) pack.get("Command"));
-        Short a = this.Command;
+        
+        byte[] cmd = ((String) pack.get("Command")).getBytes();
+        this.Command = ByteBuffer.wrap(cmd).getShort();
         //Questo nell'upload va bene perchè viene 1 bit
-        System.out.println("Lunghezza Command Spacchettato: " + Integer.bitCount(a.intValue()) + " bit");
-        this.OpCode = ((Long) pack.get("OpCode")).intValue();
+        System.out.println("Lunghezza Command Spacchettato: " + Integer.bitCount(((Short)this.Command).intValue()) + " bit");
+        
+        byte[] OC = ((String) pack.get("OpCode")).getBytes();
+        this.OpCode = ByteBuffer.wrap(OC).getInt();
         //Qui non dovrebbe tornare zero bit
         System.out.println("Lunghezza OpCode Spacchettato: " + Integer.bitCount(this.OpCode) + " bit");
+        
         this.Len_Buffer = new Short((String) pack.get("Len_Buffer"));
         Short c = this.Len_Buffer;
         //Questo va bene perchè viene un numero compreso tra 1 e 4 bit a seconda della lunghezza che dai al nome del file
-        System.out.println("Lunghezza LenBuffer Spacchettato: " + Integer.bitCount(c.intValue()) + " bit");
+        System.out.println("Lunghezza LenBuffer Spacchettato: " + Integer.bitCount(((Short)this.Len_Buffer).intValue()) + " bit");
         if(Command != 1){
             String buf = (String) pack.get("Buffer");
             this.Buffer = buf.getBytes();
@@ -54,15 +57,16 @@ public class ServerPacker implements Packer{
 
     private void Buffer_Unpack(JSONObject packet){
         JSONObject buffer = (JSONObject) packet.get("Buffer");
-        this.TotSeg = ((Long) buffer.get("N_SegTot")).intValue();
+        byte[] TS = ((String) buffer.get("N_SegTot")).getBytes();
+        this.TotSeg = ByteBuffer.wrap(TS).getInt();
+        
         this.nome_file = (String) buffer.get("nome_file");
-        String preMD5 = (String) buffer.get("MD5");
-        this.MD5 = preMD5.getBytes();
+
+        this.MD5 = ((String) buffer.get("MD5")).getBytes();
+        
         System.out.println("Lunghezza TotSeg Spacchettato: " + Integer.bitCount(this.TotSeg) + " bit");
-        int nomefilelen = this.nome_file.toCharArray().length;
-        System.out.println("Lunghezza nome file Spacchettato: " + Integer.bitCount(nomefilelen) + " bit");
-        int md5len = preMD5.toCharArray().length;
-        System.out.println("Lunghezza MD5 Spacchettato: " + Integer.bitCount(md5len) + " bit");
+        System.out.println("Lunghezza nome file Spacchettato: " + this.nome_file.length() + " byte");
+        System.out.println("Lunghezza MD5 Spacchettato: " + this.MD5.length + " byte");
     }
     
     @Override

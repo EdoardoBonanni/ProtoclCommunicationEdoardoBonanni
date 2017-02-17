@@ -6,6 +6,7 @@
 package com.mycompany.protocolcommunication;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.json.simple.JSONObject;
@@ -28,11 +29,18 @@ public class ClientPacker implements Packer{
 
     @Override
     public Object Upload(Object N_SegTot, Object nome_file, Object MD5) {
+        byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(new Short("1")).array();
+        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt(1).array();
+        
+        ByteBuffer intBuffer = ByteBuffer.allocate(Integer.BYTES);
+        intBuffer.putInt((Integer)N_SegTot);
+        byte[] TotSeg = intBuffer.array();
+        
         JSONObject upload = new JSONObject();
         JSONObject buffer = new JSONObject();
-        upload.put("Command", new Short("1").toString());
-        upload.put("OpCode", 0);
-        buffer.put("N_SegTot", N_SegTot);
+        upload.put("Command", new String(cmd));
+        upload.put("OpCode", new String(OC));
+        buffer.put("N_SegTot", new String(TotSeg));
         buffer.put("nome_file", nome_file);
         buffer.put("MD5", new String((byte[]) MD5));
         /*
@@ -48,7 +56,7 @@ public class ClientPacker implements Packer{
         int bitSeg = Integer.bitCount((Integer)N_SegTot);
         Integer b = bitSeg + (bitSeg % 8)== 0 ? 0 : 1;
         Short LenSegTot = b.shortValue();
-        System.out.println("Lunghezza Segmenti: " + LenSegTot + " byte");
+        System.out.println("Lunghezza Segmenti: " + bitSeg + " bit");
         Integer nome = ((String)nome_file).length();
         Short LenNome = nome.shortValue();
         System.out.println("Lunghezza Nome: " + LenNome + " byte");

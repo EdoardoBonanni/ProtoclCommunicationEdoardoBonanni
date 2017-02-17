@@ -5,14 +5,13 @@
  */
 package com.mycompany.protocolcommunication;
 
+
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.Base64;
+import java.nio.ByteBuffer;
+import javax.swing.*;
 import org.json.simple.JSONObject;
 
 /**
@@ -25,30 +24,38 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
+        
+        String userDir = System.getProperty("user.home");
+        JFileChooser fc = new JFileChooser(new File(userDir + "/Desktop"));
+        JFrame jf = new JFrame();
+        
         Communication comm = new SocketClient("localhost", 6789);
         ClientPacker packer = new ClientPacker();
         SendFile file = new SendFile();
         
         while(!comm.Connect());
-        JSONObject jsonObject = new JSONObject();
         BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
         
         while(true){
-            System.out.println("Inserire il path dell'immagine da inviare ");
-            String imagePath = input.readLine();
-
-            System.out.println("Inserire nome del file"); 
-            String nome_file = input.readLine();
             
-            file.CheckFile(imagePath);
+            int returnVal = fc.showOpenDialog(jf);
+            File selectedFile = null;
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                selectedFile = fc.getSelectedFile();
+            }
             
-            jsonObject = (JSONObject) packer.Upload(file.getTotSeg(), nome_file, file.getMD5());
-            comm.Send(jsonObject);
-            jsonObject.clear();
-            jsonObject = (JSONObject) comm.Receive();
-            packer.Unpack(jsonObject);
+            String nome_file = JOptionPane.showInputDialog(jf, "Nome del File");
+            
+            file.CheckFile(selectedFile);
+            
+            JSONObject packet = (JSONObject) packer.Upload(file.getTotSeg(), nome_file, file.getMD5());
+            comm.Send(packet);
+            packet.clear();
+            packet = (JSONObject) comm.Receive();
+            packer.Unpack(packet);
             System.out.println(packer.getOpCode());
             comm.Close();
+            jf.dispose();
             break;
         }
     }

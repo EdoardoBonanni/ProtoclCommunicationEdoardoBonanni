@@ -6,6 +6,7 @@
 package com.mycompany.protocolcommunicationserver;
 
 import java.nio.ByteBuffer;
+import java.util.Base64;
 import org.json.simple.JSONObject;
 
 /**
@@ -18,7 +19,7 @@ public class ServerPacker implements Packer{
     private String nome_file;
     private byte[] MD5;
     private short Command;
-    private int OpCode;
+    private long OpCode;
     private short Len_Buffer;
     private byte[] Buffer;
     private byte[] CheckSum;
@@ -32,27 +33,28 @@ public class ServerPacker implements Packer{
         
         byte[] cmd = ((String) pack.get("Command")).getBytes();
         this.Command = ByteBuffer.wrap(cmd).getShort();
-        //Questo nell'upload va bene perchè viene 1 bit
-        System.out.println("Lunghezza Command Spacchettato: " + Integer.bitCount(((Short)this.Command).intValue()) + " bit");
         
         byte[] OC = ((String) pack.get("OpCode")).getBytes();
-        this.OpCode = ByteBuffer.wrap(OC).getInt();
-        //Qui non dovrebbe tornare zero bit
-        System.out.println("Lunghezza OpCode Spacchettato: " + Integer.bitCount(this.OpCode) + " bit");
+        this.OpCode = ByteBuffer.wrap(OC).getInt() + Integer.MAX_VALUE;
+       
+        byte[] LB = ((String) pack.get("Len_Buffer")).getBytes();
+        this.Len_Buffer = ByteBuffer.wrap(LB).getShort();
         
-        this.Len_Buffer = new Short((String) pack.get("Len_Buffer"));
-        Short c = this.Len_Buffer;
-        //Questo va bene perchè viene un numero compreso tra 1 e 4 bit a seconda della lunghezza che dai al nome del file
-        System.out.println("Lunghezza LenBuffer Spacchettato: " + Integer.bitCount(((Short)this.Len_Buffer).intValue()) + " bit");
         if(Command != 1){
             String buf = (String) pack.get("Buffer");
-            this.Buffer = buf.getBytes();
+            this.Buffer = Base64.getDecoder().decode(buf);
         }
         else{
             Buffer_Unpack(pack);
         }
         String check = (String) pack.get("CheckSum");
         this.CheckSum = check.getBytes();
+        
+        /*
+        System.out.println("Lunghezza Command Spacchettato: " + cmd.length + " byte");
+        System.out.println("Lunghezza OpCode Spacchettato: " + OC.length + " byte");
+        System.out.println("Lunghezza LenBuffer Spacchettato: " + LB.length + " byte");
+        */
     }
 
     private void Buffer_Unpack(JSONObject packet){
@@ -61,20 +63,26 @@ public class ServerPacker implements Packer{
         this.TotSeg = ByteBuffer.wrap(TS).getInt();
         
         this.nome_file = (String) buffer.get("nome_file");
-
-        this.MD5 = ((String) buffer.get("MD5")).getBytes();
         
-        System.out.println("Lunghezza TotSeg Spacchettato: " + Integer.bitCount(this.TotSeg) + " bit");
+        this.MD5 = ((String) buffer.get("MD5")).getBytes();
+        /*
+        System.out.println("Lunghezza TotSeg Spacchettato: " + TS.length + " byte");
         System.out.println("Lunghezza nome file Spacchettato: " + this.nome_file.length() + " byte");
         System.out.println("Lunghezza MD5 Spacchettato: " + this.MD5.length + " byte");
+        */
     }
     
     @Override
     public Object Ack(Object N_Seg) {
         JSONObject ack = new JSONObject();
-        ack.put("Command", new Short("4").toString());
-        ack.put("OpCode", (int)N_Seg);
-        ack.put("Len_Buffer", new Short("0").toString());
+        
+        byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(new Short("4")).array();
+        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt(1).array();
+        byte[] LenBuffer = ByteBuffer.allocate(Short.BYTES).array();
+        
+        ack.put("Command", new String(cmd));
+        ack.put("OpCode", new String(OC));
+        ack.put("Len_Buffer", new String(LenBuffer));
         ack.put("Buffer", "");
         ack.put("CheckSum", "");
         return ack;
@@ -82,10 +90,15 @@ public class ServerPacker implements Packer{
 
     @Override
     public Object Nack(Object Error) {
-        JSONObject nack = new JSONObject();
-        nack.put("Command", new Short("5").toString());
-        nack.put("OpCode", (int)Error);
-        nack.put("Len_Buffer", 0);
+       JSONObject nack = new JSONObject();
+        
+        byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(new Short("5")).array();
+        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt((int)Error).array();
+        byte[] LenBuffer = ByteBuffer.allocate(Short.BYTES).array();
+        
+        nack.put("Command", new String(cmd));
+        nack.put("OpCode", new String(OC));
+        nack.put("Len_Buffer", new String(LenBuffer));
         nack.put("Buffer", "");
         nack.put("CheckSum", "");
         return nack;
@@ -95,7 +108,7 @@ public class ServerPacker implements Packer{
         return Command;
     }
 
-    public int getOpCode() {
+    public long getOpCode() {
         return OpCode;
     }
 

@@ -10,7 +10,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
 import javax.swing.*;
 import org.json.simple.JSONObject;
 
@@ -23,7 +22,7 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
         
         String userDir = System.getProperty("user.home");
         JFileChooser fc = new JFileChooser(new File(userDir + "/Desktop"));
@@ -34,26 +33,30 @@ public class Main {
         SendFile file = new SendFile();
         
         while(!comm.Connect());
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        
+        int returnVal = fc.showOpenDialog(jf);
+        File selectedFile = null;
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            selectedFile = fc.getSelectedFile();
+        }
+        
+        String nome_file = JOptionPane.showInputDialog(jf, "Nome del File");
+        file.CheckFile(selectedFile);
+        SendBuilder build = new SendBuilder(selectedFile);
+        
+        JSONObject packet = (JSONObject) packer.Upload(file.getTotSeg(), nome_file, file.getMD5());
+        comm.Send(packet);
+        packet.clear();
+        packet = (JSONObject) comm.Receive();
+        packer.Unpack(packet);
         
         while(true){
-            
-            int returnVal = fc.showOpenDialog(jf);
-            File selectedFile = null;
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                selectedFile = fc.getSelectedFile();
-            }
-            
-            String nome_file = JOptionPane.showInputDialog(jf, "Nome del File");
-            
-            file.CheckFile(selectedFile);
-            
-            JSONObject packet = (JSONObject) packer.Upload(file.getTotSeg(), nome_file, file.getMD5());
+            packet = (JSONObject) packer.Send(packer.getOpCode(), build.Build(packer.getOpCode()));
             comm.Send(packet);
             packet.clear();
             packet = (JSONObject) comm.Receive();
             packer.Unpack(packet);
-            System.out.println(packer.getOpCode());
+            System.out.println(packer.getCommand());
             comm.Close();
             jf.dispose();
             break;

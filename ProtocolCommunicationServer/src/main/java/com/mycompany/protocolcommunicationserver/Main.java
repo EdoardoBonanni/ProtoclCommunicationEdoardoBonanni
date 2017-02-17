@@ -24,11 +24,14 @@ public class Main {
         comm.Connect();
         JSONObject jsonObject = new JSONObject();
         ServerPacker packer = new ServerPacker();
+        jsonObject = (JSONObject) comm.Receive();
+        packer.Unpack(jsonObject);
+        comm.Send(packer.Ack(1));
+        jsonObject.clear();
         while(true){
             jsonObject = (JSONObject) comm.Receive();
             packer.Unpack(jsonObject);
-            System.out.println(packer.getTotSeg());
-            comm.Send(packer.Ack(1));
+            comm.Send(packer.Ack(2));
             comm.Close();
             break;
         }

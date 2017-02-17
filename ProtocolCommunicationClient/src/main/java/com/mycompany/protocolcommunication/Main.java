@@ -37,7 +37,7 @@ public class Main {
             System.out.println("Inserire il path dell'immagine da inviare ");
             String imagePath = input.readLine();
 
-            System.out.println("Inserire nome del file");
+            System.out.println("Inserire nome del file"); 
             String nome_file = input.readLine();
             
             file.CheckFile(imagePath);

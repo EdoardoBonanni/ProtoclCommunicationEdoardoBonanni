@@ -16,9 +16,9 @@ import org.json.simple.JSONObject;
  */
 public class ClientPacker implements Packer{
     
-    private int Command;
+    private short Command;
     private int OpCode;
-    private int Len_Buffer;
+    private short Len_Buffer;
     private byte[] Buffer;
     //CheckSum array di byte
     private byte[] CheckSum;
@@ -30,12 +30,32 @@ public class ClientPacker implements Packer{
     public Object Upload(Object N_SegTot, Object nome_file, Object MD5) {
         JSONObject upload = new JSONObject();
         JSONObject buffer = new JSONObject();
-        upload.put("Command", 1);
+        upload.put("Command", new Short("1").toString());
         upload.put("OpCode", 0);
         buffer.put("N_SegTot", N_SegTot);
         buffer.put("nome_file", nome_file);
         buffer.put("MD5", new String((byte[]) MD5));
-        upload.put("Len_Buffer", buffer.size());
+        /*
+        int a = ((Long)myFile.length()).intValue();
+        int b = a%4096;
+        if(b != 0){
+            TotSeg = (int) (myFile.length()/4096) + 1;
+        }
+        else{
+            TotSeg = (int) (myFile.length()/4096);
+        }
+        */
+        int bitSeg = Integer.bitCount((Integer)N_SegTot);
+        Integer b = bitSeg + (bitSeg % 8)== 0 ? 0 : 1;
+        Short LenSegTot = b.shortValue();
+        System.out.println("Lunghezza Segmenti: " + LenSegTot + " byte");
+        Integer nome = ((String)nome_file).length();
+        Short LenNome = nome.shortValue();
+        System.out.println("Lunghezza Nome: " + LenNome + " byte");
+        Short LenMD5 = ((Integer)((byte[])MD5).length).shortValue();
+        System.out.println("Lunghezza MD5: " + LenMD5 + " byte");
+        Short TotLen = (short)(LenSegTot + LenNome + LenMD5);
+        upload.put("Len_Buffer", TotLen.toString());
         upload.put("Buffer", buffer);
         upload.put("CheckSum", "");
         return upload;
@@ -66,9 +86,9 @@ public class ClientPacker implements Packer{
     @Override
     public void Unpack(Object packet) {
         JSONObject pack = (JSONObject) packet;
-        this.Command = ((Long) pack.get("Command")).intValue();
+        this.Command = new Short((String) pack.get("Command"));
         this.OpCode = ((Long) pack.get("OpCode")).intValue();
-        this.Len_Buffer = ((Long) pack.get("Len_Buffer")).intValue();
+        this.Len_Buffer = new Short((String) pack.get("Len_Buffer"));
         String buf = (String) pack.get("Buffer");
         this.Buffer = buf.getBytes();
         String check = (String) pack.get("CheckSum");

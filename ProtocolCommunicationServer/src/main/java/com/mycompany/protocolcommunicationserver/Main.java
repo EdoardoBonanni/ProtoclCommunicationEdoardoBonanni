@@ -6,8 +6,6 @@
 package com.mycompany.protocolcommunicationserver;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Base64;
 import org.json.simple.JSONObject;
 
 /**
@@ -20,18 +18,21 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
-        Communication comm = new SocketServer(6789);
+        SocketServer comm = new SocketServer(6789);
         comm.Connect();
+        System.out.println("Connected with " + comm.getConnectionSocket().getInetAddress());
         JSONObject jsonObject = new JSONObject();
         ServerPacker packer = new ServerPacker();
         jsonObject = (JSONObject) comm.Receive();
         packer.Unpack(jsonObject);
-        comm.Send(packer.Ack(1));
+        System.out.println(packer.toString());
+        comm.Send(packer.Ack((long)1));
         jsonObject.clear();
         while(true){
             jsonObject = (JSONObject) comm.Receive();
             packer.Unpack(jsonObject);
-            comm.Send(packer.Ack(2));
+            System.out.println(packer.toString());
+            comm.Send(packer.Ack((long)2));
             comm.Close();
             break;
         }

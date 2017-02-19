@@ -15,12 +15,12 @@ import org.json.simple.JSONObject;
  */
 public class ServerPacker implements Packer{
     
-    private int TotSeg;
+    private long TotSeg;
     private String nome_file;
     private byte[] MD5;
-    private short Command;
+    private int Command;
     private long OpCode;
-    private short Len_Buffer;
+    private int Len_Buffer;
     private byte[] Buffer;
     private byte[] CheckSum;
     
@@ -31,109 +31,134 @@ public class ServerPacker implements Packer{
     public void Unpack(Object packet){
         JSONObject pack = (JSONObject) packet;
         
-        byte[] cmd = ((String) pack.get("Command")).getBytes();
-        this.Command = ByteBuffer.wrap(cmd).getShort();
+        byte[] cmd = toBytes((String) pack.get("Command"));
+        this.Command = ByteBuffer.wrap(cmd).getShort() + Short.MAX_VALUE;
         
-        byte[] OC = ((String) pack.get("OpCode")).getBytes();
+        byte[] OC = toBytes((String) pack.get("OpCode"));
         this.OpCode = ByteBuffer.wrap(OC).getInt() + Integer.MAX_VALUE;
        
-        byte[] LB = ((String) pack.get("Len_Buffer")).getBytes();
-        this.Len_Buffer = ByteBuffer.wrap(LB).getShort();
+        byte[] LB = toBytes((String) pack.get("Len_Buffer"));
+        this.Len_Buffer = ByteBuffer.wrap(LB).getShort() + Short.MAX_VALUE;
         
         if(Command != 1){
             String buf = (String) pack.get("Buffer");
-            this.Buffer = Base64.getDecoder().decode(buf);
+            this.Buffer = toBytes(buf);
         }
         else{
             Buffer_Unpack(pack);
         }
-        String check = (String) pack.get("CheckSum");
-        this.CheckSum = check.getBytes();
         
-        /*
-        System.out.println("Lunghezza Command Spacchettato: " + cmd.length + " byte");
-        System.out.println("Lunghezza OpCode Spacchettato: " + OC.length + " byte");
-        System.out.println("Lunghezza LenBuffer Spacchettato: " + LB.length + " byte");
-        */
+        String check = (String) pack.get("CheckSum");
+        this.CheckSum = toBytes(check);
+
     }
 
     private void Buffer_Unpack(JSONObject packet){
         JSONObject buffer = (JSONObject) packet.get("Buffer");
-        byte[] TS = ((String) buffer.get("N_SegTot")).getBytes();
-        this.TotSeg = ByteBuffer.wrap(TS).getInt();
+        
+        byte[] TS = toBytes((String) buffer.get("N_SegTot"));
+        this.TotSeg = ByteBuffer.wrap(TS).getInt() + Integer.MAX_VALUE;
         
         this.nome_file = (String) buffer.get("nome_file");
         
-        this.MD5 = ((String) buffer.get("MD5")).getBytes();
-        /*
-        System.out.println("Lunghezza TotSeg Spacchettato: " + TS.length + " byte");
-        System.out.println("Lunghezza nome file Spacchettato: " + this.nome_file.length() + " byte");
-        System.out.println("Lunghezza MD5 Spacchettato: " + this.MD5.length + " byte");
-        */
+        this.MD5 = toBytes((String) buffer.get("MD5"));
     }
     
     @Override
     public Object Ack(Object N_Seg) {
         JSONObject ack = new JSONObject();
         
-        byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(new Short("4")).array();
-        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt(1).array();
-        byte[] LenBuffer = ByteBuffer.allocate(Short.BYTES).array();
+        short comm = 4 - Short.MAX_VALUE;
+        short lBuf = 0 - Short.MAX_VALUE;
+        byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
+        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt((int) ((long)N_Seg - Integer.MAX_VALUE)).array();
+        byte[] LenBuff = ByteBuffer.allocate(Short.BYTES).putShort(lBuf).array();
         
-        ack.put("Command", new String(cmd));
-        ack.put("OpCode", new String(OC));
-        ack.put("Len_Buffer", new String(LenBuffer));
+        ack.put("Command", toBase64(cmd));
+        ack.put("OpCode", toBase64(OC));
+        ack.put("Len_Buffer", toBase64(LenBuff));
         ack.put("Buffer", "");
         ack.put("CheckSum", "");
+        
         return ack;
     }
 
     @Override
     public Object Nack(Object Error) {
-       JSONObject nack = new JSONObject();
+        JSONObject nack = new JSONObject();
         
-        byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(new Short("5")).array();
-        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt((int)Error).array();
-        byte[] LenBuffer = ByteBuffer.allocate(Short.BYTES).array();
+        short comm = 5 - Short.MAX_VALUE;
+        short lBuf = 0 - Short.MAX_VALUE;
+        byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
+        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt(((int)Error) - Integer.MAX_VALUE).array();
+        byte[] LenBuffer = ByteBuffer.allocate(Short.BYTES).putShort(lBuf).array();
         
-        nack.put("Command", new String(cmd));
-        nack.put("OpCode", new String(OC));
-        nack.put("Len_Buffer", new String(LenBuffer));
+        nack.put("Command", toBase64(cmd));
+        nack.put("OpCode", toBase64(OC));
+        nack.put("Len_Buffer", toBase64(LenBuffer));
         nack.put("Buffer", "");
         nack.put("CheckSum", "");
+        
         return nack;
     }
 
-    public short getCommand() {
-        return Command;
+    private String toBase64(byte[] obj){
+        return Base64.getEncoder().encodeToString(obj);
+    }
+    
+    private byte[] toBytes(String obj){
+        return Base64.getDecoder().decode(obj);
+    } 
+    
+    public int getCommand() {
+        return this.Command;
     }
 
     public long getOpCode() {
-        return OpCode;
+        return this.OpCode;
     }
 
-    public short getLen_Buffer() {
-        return Len_Buffer;
+    public int getLen_Buffer() {
+        return this.Len_Buffer;
     }
 
     public byte[] getBuffer() {
-        return Buffer;
+        return this.Buffer;
     }
 
     public byte[] getCheckSum() {
-        return CheckSum;
+        return this.CheckSum;
     }
 
-    public int getTotSeg() {
-        return TotSeg;
+    public long getTotSeg() {
+        return this.TotSeg;
     }
 
     public String getNome_file() {
-        return nome_file;
+        return this.nome_file;
     }
 
     public byte[] getMD5() {
-        return MD5;
+        return this.MD5;
+    }
+
+    @Override
+    public String toString() {
+        String cmd = "Command: " + this.Command + "\n";
+        String OC = "OpCode: " + this.OpCode + "\n";
+        String lenBuff = "Lunghezza Buffer: " + this.Len_Buffer + "\n";
+        String buff = "";
+        if(this.Command != 1){
+            buff = "Buffer: " + this.Buffer + "\n";
+        }
+        else{
+            String totSeg = "Totale Segmenti: " + this.TotSeg + "\n";
+            String file = "Nome file: " + this.nome_file + "\n";
+            String MD5 = "MD5: " + this.MD5 + "\n";
+            buff = totSeg + file + MD5;
+        }
+        String chk = "CheckSum: " + this.CheckSum + "\n";
+        return cmd + OC + lenBuff + buff + chk;
     }
     
 }

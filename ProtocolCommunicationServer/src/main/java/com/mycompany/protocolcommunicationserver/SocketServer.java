@@ -73,4 +73,8 @@ public class SocketServer implements Communication {
             return false;
         }
     }
+
+    public Socket getConnectionSocket() {
+        return connectionSocket;
+    }
 }

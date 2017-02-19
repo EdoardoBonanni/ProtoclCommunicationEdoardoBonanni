@@ -47,7 +47,7 @@ public class Main {
         packer.Unpack(packet);
         System.out.println(packer.toString());
         
-        while(true){
+        while(build.Build(packer.getOpCode()) != null){
             packet = (JSONObject) packer.Send(packer.getOpCode(), build.Build(packer.getOpCode()));
             comm.Send(packet);
             
@@ -55,10 +55,9 @@ public class Main {
             packet = (JSONObject) comm.Receive();
             packer.Unpack(packet);
             System.out.println(packer.toString());
-            
-            comm.Close();
-            jf.dispose();
-            break;
         }
+        System.out.println("END");
+        comm.Close();
+        jf.dispose();
     }
 }

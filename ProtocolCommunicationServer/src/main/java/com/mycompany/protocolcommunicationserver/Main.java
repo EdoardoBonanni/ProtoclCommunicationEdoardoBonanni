@@ -21,8 +21,7 @@ public class Main {
         SocketServer comm = new SocketServer(6789);
         comm.Connect();
         System.out.println("Connected with " + comm.getConnectionSocket().getInetAddress());
-        
-        JSONObject packet;
+
         ServerPacker packer = new ServerPacker();
         
         packer.Unpack(comm.Receive());
@@ -42,7 +41,6 @@ public class Main {
             fs.getNextSeg();
             comm.Send(packer.Ack(fs.getNextSeg()));
         }
-        System.out.println(packer.toString());
         comm.Close();
     }
     

@@ -39,7 +39,7 @@ public class Main {
         
         SendBuilder build = new SendBuilder(selectedFile);
         
-        JSONObject packet = (JSONObject) packer.Upload(build.getTotSeg(), nome_file, build.getMD5());
+        JSONObject packet = (JSONObject) packer.Upload(build.getTotSeg(), nome_file + "." + build.getFileExtension(selectedFile), build.getMD5());
         comm.Send(packet);
         
         packet.clear();
@@ -51,6 +51,7 @@ public class Main {
             packet = (JSONObject) packer.Send(packer.getOpCode(), build.Build(packer.getOpCode(), selectedFile));
             comm.Send(packet);
             packer.Unpack(comm.Receive());
+            System.out.println(packer.toString());
         }
         comm.Send(packer.End(1));
         packer.Unpack((JSONObject) comm.Receive());

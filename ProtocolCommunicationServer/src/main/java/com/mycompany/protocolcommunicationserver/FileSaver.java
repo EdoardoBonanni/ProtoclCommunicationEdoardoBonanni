@@ -17,7 +17,7 @@ public class FileSaver {
     private FileOutputStream fos; 
     
     public FileSaver(String nome_file) throws FileNotFoundException {
-        this.path = System.getProperty("user.home") + "/Desktop/" + nome_file + ".jpg";
+        this.path = System.getProperty("user.home") + "/Desktop/" + nome_file;
         fos = new FileOutputStream(path, true);
     }
 

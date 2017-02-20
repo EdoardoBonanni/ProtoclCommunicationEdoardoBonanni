@@ -40,11 +40,11 @@ public class ClientPacker implements Packer{
         buffer.put("fileName", nome_file);
         buffer.put("md5", toBase64((byte[])MD5));
         
-        Short LenNome = ((Integer)((String)nome_file).length()).shortValue();
-        Short LenMD5 = ((Integer)((byte[])MD5).length).shortValue();
+        int LenNome = (int)((String)nome_file).length();
+        int LenMD5 = (int)((byte[])MD5).length;
         
-        int TotLen = (int)(LenNome + LenMD5);
-        byte[] LenSeg = ByteBuffer.allocate(Integer.BYTES).putInt((int) (TotLen - Integer.MAX_VALUE)).array();
+        long buffLen = LenNome + LenMD5;
+        byte[] LenSeg = ByteBuffer.allocate(Integer.BYTES).putInt((int) (buffLen - Integer.MAX_VALUE)).array();
         
         upload.put("bufferLength", toBase64(LenSeg));
         upload.put("buffer", buffer);
@@ -67,16 +67,16 @@ public class ClientPacker implements Packer{
         long Seg = (long)N_Seg;
         
         short comm = 2 - Short.MAX_VALUE;
-        int lBuf = (int) ((byte[])buffer).length;
+        long lBuf = ((byte[])buffer).length;
         byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
         byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt((int)Seg - Integer.MAX_VALUE).array();
-        byte[] LenBuff = ByteBuffer.allocate(Integer.BYTES).putShort((short) (lBuf - Short.MAX_VALUE)).array();
+        byte[] LenBuff = ByteBuffer.allocate(Integer.BYTES).putInt((int) (lBuf - Integer.MAX_VALUE)).array();
         
         send.put("command", toBase64(cmd));
         send.put("opCode", toBase64(OC));
         send.put("bufferLength", toBase64(LenBuff));
         send.put("buffer", toBase64((byte[]) buffer));
-        send.put("checkSum", "");
+        send.put("checksum", "");
         
         return send;
     }
@@ -86,7 +86,7 @@ public class ClientPacker implements Packer{
         JSONObject end = new JSONObject();
         
         short comm = 3 - Short.MAX_VALUE;
-        short lBuf = 0 - Short.MAX_VALUE;
+        int lBuf = 0 - Integer.MAX_VALUE;
         byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
         byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt((int)OpCode - Integer.MAX_VALUE).array();
         byte[] LenBuff = ByteBuffer.allocate(Integer.BYTES).putInt(lBuf).array();
@@ -115,7 +115,7 @@ public class ClientPacker implements Packer{
         String buf = (String) pack.get("buffer");
         this.Buffer = toBytes(buf);
         
-        String check = (String) pack.get("checkSum");
+        String check = (String) pack.get("checksum");
         this.CheckSum = toBytes(check);
         
     }

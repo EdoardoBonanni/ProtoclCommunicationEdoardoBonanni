@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.HashMap;
 
 /**
  *
@@ -60,6 +59,15 @@ public class SendBuilder {
             i++;
         }
         return buffer;
+    }
+    
+    public String getFileExtension(File file) {
+        String name = file.getName();
+        try {
+            return name.substring(name.lastIndexOf(".") + 1);
+        } catch (Exception e) {
+            return "";
+        }
     }
     
     public long getTotSeg() {

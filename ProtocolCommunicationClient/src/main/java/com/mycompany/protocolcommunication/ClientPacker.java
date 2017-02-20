@@ -17,7 +17,7 @@ public class ClientPacker implements Packer{
     
     private int Command;
     private long OpCode;
-    private int Len_Buffer;
+    private long Len_Buffer;
     private byte[] Buffer;
     //CheckSum array di byte
     private byte[] CheckSum;
@@ -30,36 +30,25 @@ public class ClientPacker implements Packer{
         
         short comm = 1 - Short.MAX_VALUE;
         byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
-        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt(0 - Integer.MAX_VALUE).array();
         byte[] TotSeg = ByteBuffer.allocate(Integer.BYTES).putInt((int) ((long)N_SegTot - Integer.MAX_VALUE)).array();
         
         JSONObject upload = new JSONObject();
         JSONObject buffer = new JSONObject();
         
-        upload.put("Command", toBase64(cmd));
-        upload.put("OpCode", toBase64(OC));
-        
-        buffer.put("N_SegTot", toBase64(TotSeg));
-        buffer.put("nome_file", nome_file);
-        buffer.put("MD5", toBase64((byte[])MD5));
-        
-        int bitSeg = Integer.toBinaryString(4096).length();
-        Integer b;
-        if(bitSeg%8 > 0)
-            b = bitSeg/8 + 1;
-        else
-            b = bitSeg/8;
-        Short LenSegTot = b.shortValue();
+        upload.put("command", toBase64(cmd));
+        upload.put("opCode", toBase64(TotSeg));
+        buffer.put("fileName", nome_file);
+        buffer.put("md5", toBase64((byte[])MD5));
         
         Short LenNome = ((Integer)((String)nome_file).length()).shortValue();
         Short LenMD5 = ((Integer)((byte[])MD5).length).shortValue();
         
-        Short TotLen = (short)(LenSegTot + LenNome + LenMD5);
-        byte[] LenSeg = ByteBuffer.allocate(Short.BYTES).putShort((short) (TotLen - Short.MAX_VALUE)).array();
+        int TotLen = (int)(LenNome + LenMD5);
+        byte[] LenSeg = ByteBuffer.allocate(Integer.BYTES).putInt((int) (TotLen - Integer.MAX_VALUE)).array();
         
-        upload.put("Len_Buffer", toBase64(LenSeg));
-        upload.put("Buffer", buffer);
-        upload.put("CheckSum", "");
+        upload.put("bufferLength", toBase64(LenSeg));
+        upload.put("buffer", buffer);
+        upload.put("checksum", "");
         
         /*
         System.out.println("Command: " + 1 + ", Lunghezza: " + cmd.length);
@@ -78,16 +67,16 @@ public class ClientPacker implements Packer{
         long Seg = (long)N_Seg;
         
         short comm = 2 - Short.MAX_VALUE;
-        short lBuf = (short) ((byte[])buffer).length;
+        int lBuf = (int) ((byte[])buffer).length;
         byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
         byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt((int)Seg - Integer.MAX_VALUE).array();
-        byte[] LenBuff = ByteBuffer.allocate(Short.BYTES).putShort((short) (lBuf - Short.MAX_VALUE)).array();
+        byte[] LenBuff = ByteBuffer.allocate(Integer.BYTES).putShort((short) (lBuf - Short.MAX_VALUE)).array();
         
-        send.put("Command", toBase64(cmd));
-        send.put("OpCode", toBase64(OC));
-        send.put("Len_Buffer", toBase64(LenBuff));
-        send.put("Buffer", toBase64((byte[]) buffer));
-        send.put("CheckSum", "");
+        send.put("command", toBase64(cmd));
+        send.put("opCode", toBase64(OC));
+        send.put("bufferLength", toBase64(LenBuff));
+        send.put("buffer", toBase64((byte[]) buffer));
+        send.put("checkSum", "");
         
         return send;
     }
@@ -100,13 +89,13 @@ public class ClientPacker implements Packer{
         short lBuf = 0 - Short.MAX_VALUE;
         byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
         byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt((int)OpCode - Integer.MAX_VALUE).array();
-        byte[] LenBuff = ByteBuffer.allocate(Short.BYTES).putShort(lBuf).array();
+        byte[] LenBuff = ByteBuffer.allocate(Integer.BYTES).putInt(lBuf).array();
         
-        end.put("Command", toBase64(cmd));
-        end.put("OpCode", toBase64(OC));
-        end.put("Len_Buffer", toBase64(LenBuff));
-        end.put("Buffer", "");
-        end.put("CheckSum", "");
+        end.put("command", toBase64(cmd));
+        end.put("opCode", toBase64(OC));
+        end.put("bufferLength", toBase64(LenBuff));
+        end.put("buffer", "");
+        end.put("checksum", "");
         return end;
     }
 
@@ -114,19 +103,19 @@ public class ClientPacker implements Packer{
     public void Unpack(Object packet) {
         JSONObject pack = (JSONObject) packet;
         
-        byte[] cmd = toBytes((String) pack.get("Command"));
+        byte[] cmd = toBytes((String) pack.get("command"));
         this.Command = ByteBuffer.wrap(cmd).getShort() + Short.MAX_VALUE;
         
-        byte[] OC = toBytes((String) pack.get("OpCode"));
+        byte[] OC = toBytes((String) pack.get("opCode"));
         this.OpCode = ByteBuffer.wrap(OC).getInt() + Integer.MAX_VALUE;
         
-        byte[] LB = toBytes((String) pack.get("Len_Buffer"));
-        this.Len_Buffer = ByteBuffer.wrap(LB).getShort() + Short.MAX_VALUE;
+        byte[] LB = toBytes((String) pack.get("bufferLength"));
+        this.Len_Buffer = ByteBuffer.wrap(LB).getInt() + Integer.MAX_VALUE;
         
-        String buf = (String) pack.get("Buffer");
+        String buf = (String) pack.get("buffer");
         this.Buffer = toBytes(buf);
         
-        String check = (String) pack.get("CheckSum");
+        String check = (String) pack.get("checkSum");
         this.CheckSum = toBytes(check);
         
     }
@@ -147,7 +136,7 @@ public class ClientPacker implements Packer{
         return OpCode;
     }
 
-    public int getLen_Buffer() {
+    public long getLen_Buffer() {
         return Len_Buffer;
     }
 

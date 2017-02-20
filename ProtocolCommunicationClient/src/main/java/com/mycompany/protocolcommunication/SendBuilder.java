@@ -7,9 +7,11 @@ package com.mycompany.protocolcommunication;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -17,8 +19,8 @@ import java.util.HashMap;
  * @author Edoardo
  */
 public class SendBuilder {
-    private final int SegmentDimension = 4096;
-    private HashMap<Long, byte[]> buffer = new HashMap<>();
+    private final int SegmentDimension = 2048;
+    private byte[] buffer;
     private long TotSeg;
     private byte[] MD5;
 
@@ -26,19 +28,13 @@ public class SendBuilder {
         FileInputStream fis = new FileInputStream(myFile);
         byte[] buff = new byte[SegmentDimension];
         
-        long i = 1;
-        while(fis.read(buff) != -1){
-            buffer.put(i, buff);
-            i++;
-        }
-        
         long a = (Long)myFile.length();
-        long b = a%4096;
+        long b = a%SegmentDimension;
         if(b != 0){
-            TotSeg = myFile.length()/4096 + 1;
+            TotSeg = myFile.length()/SegmentDimension + 1;
         }
         else{
-            TotSeg = myFile.length()/4096;
+            TotSeg = myFile.length()/SegmentDimension;
         }
         
         try {
@@ -48,8 +44,22 @@ public class SendBuilder {
         //buffer.forEach((k,v)-> System.out.println(k + ", " + v));
     }
     
-    public byte[] Build(long NextSeg){
-        return buffer.get(NextSeg);
+    public byte[] Build(long NextSeg, File myFile) throws FileNotFoundException, IOException{
+        FileInputStream fis = new FileInputStream(myFile);
+        byte[] buff = new byte[SegmentDimension];
+        long i = 1;
+        while(fis.read(buff) != -1){
+            if(i == NextSeg){
+                if(NextSeg == TotSeg){
+                    byte[] last = Arrays.copyOf(buff, (int)(myFile.length()%SegmentDimension));
+                    return last;
+                }
+                buffer = buff;
+                break;
+            }
+            i++;
+        }
+        return buffer;
     }
     
     public long getTotSeg() {

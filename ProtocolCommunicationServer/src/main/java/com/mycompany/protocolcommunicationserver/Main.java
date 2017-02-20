@@ -22,26 +22,27 @@ public class Main {
         comm.Connect();
         System.out.println("Connected with " + comm.getConnectionSocket().getInetAddress());
         
-        JSONObject jsonObject = new JSONObject();
+        JSONObject packet;
         ServerPacker packer = new ServerPacker();
         
-        jsonObject = (JSONObject) comm.Receive();
-        packer.Unpack(jsonObject);
+        packer.Unpack(comm.Receive());
         System.out.println(packer.toString());
         FileSaver fs = new FileSaver(packer.getNome_file());
         
-        comm.Send(packer.Ack((long)1));
-        jsonObject.clear();
+        comm.Send(packer.Ack(fs.getNextSeg()));
         
-        do{
-            jsonObject = (JSONObject) comm.Receive();
-            packer.Unpack(jsonObject);
+        while(true){
+            packer.Unpack(comm.Receive());
             System.out.println(packer.toString());
-            fs.toBuffer(packer.getBuffer());
+            if(packer.getCommand() == 3){
+                comm.Send(packer.Ack((long)0));
+                break;
+            }
+            fs.toFile(packer.getBuffer());
             fs.getNextSeg();
             comm.Send(packer.Ack(fs.getNextSeg()));
-        }while(fs.getNextSeg() <= packer.getTotSeg());
-        fs.toFile();
+        }
+        System.out.println(packer.toString());
         comm.Close();
     }
     

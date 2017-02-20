@@ -60,7 +60,7 @@ public class SocketClient implements Communication {
             JSONObject ServerJsonObject = (JSONObject) jsonParser.parse(inServ.readLine());
             return ServerJsonObject;
         } catch (IOException | ParseException ex){
-            return new JSONObject();
+            return null;
         }
     }
 

@@ -1,11 +1,10 @@
 package com.mycompany.protocolcommunicationserver;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -13,36 +12,30 @@ import java.util.logging.Logger;
  */
 public class FileSaver {
 
+    private final int SegmentDimension = 2048;
     private String path;
-    private HashMap<Long, byte[]> buffer; 
+    private FileOutputStream fos; 
     
-    public FileSaver(String nome_file) {
-        this.path = "C:\\Users\\lucag\\Desktop\\" + nome_file + ".jpg";
-        this.buffer = new HashMap<>();
-    }
-    
-    public void toBuffer(byte[] segment){
-        buffer.put((long) buffer.size() + 1, segment);
-        /*
-        */
+    public FileSaver(String nome_file) throws FileNotFoundException {
+        this.path = System.getProperty("user.home") + "/Desktop/" + nome_file + ".jpg";
+        fos = new FileOutputStream(path, true);
     }
 
-    public void toFile(){
-        try {
-            FileOutputStream fos = new FileOutputStream(path, true);
-            buffer.forEach((k,v)-> {
-                try {
-                    fos.write(v);
-                } catch (IOException ex) {
-                }
-            });
-            fos.close();
-        } catch (IOException ex) {
-            
-        }
+    public void toFile(byte[] segment) throws IOException{
+        fos.write(segment);
     }
     
-    public long getNextSeg() {
-        return buffer.size() + 1;
+    public void close() throws IOException{
+        fos.close();
+    }
+    
+    public long getNextSeg() throws IOException {
+        FileInputStream fin = new FileInputStream(new File(path));
+        long i = 1;
+        byte[] b = new byte[SegmentDimension];
+        while(fin.read(b) != -1){
+            i++;
+        }
+        return i;
     }
 }

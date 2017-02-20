@@ -47,16 +47,14 @@ public class Main {
         packer.Unpack(packet);
         System.out.println(packer.toString());
         
-        while(build.Build(packer.getOpCode()) != null){
-            packet = (JSONObject) packer.Send(packer.getOpCode(), build.Build(packer.getOpCode()));
+        while(packer.getOpCode() <= build.getTotSeg()){
+            packet = (JSONObject) packer.Send(packer.getOpCode(), build.Build(packer.getOpCode(), selectedFile));
             comm.Send(packet);
-            
-            packet.clear();
-            packet = (JSONObject) comm.Receive();
-            packer.Unpack(packet);
-            System.out.println(packer.toString());
+            packer.Unpack(comm.Receive());
         }
-        System.out.println("END");
+        comm.Send(packer.End(1));
+        packer.Unpack((JSONObject) comm.Receive());
+        System.out.println(packer.toString());
         comm.Close();
         jf.dispose();
     }

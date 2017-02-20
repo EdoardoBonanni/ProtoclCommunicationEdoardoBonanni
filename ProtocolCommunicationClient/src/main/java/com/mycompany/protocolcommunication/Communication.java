@@ -11,11 +11,11 @@ package com.mycompany.protocolcommunication;
  */
 public interface Communication {
     
-    public boolean Connect();
+    boolean Connect();
     
-    public boolean Send(Object obj);
+    boolean Send(Object obj);
     
-    public Object Receive();
+    Object Receive();
      
-    public boolean Close();
+    boolean Close();
 }

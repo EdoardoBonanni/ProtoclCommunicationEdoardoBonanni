@@ -29,7 +29,8 @@ public class Main {
         FileSaver fs = new FileSaver(packer.getNome_file());
         
         comm.Send(packer.Ack(fs.getNextSeg()));
-        
+        int maxRetry = 0;
+        int prova =0;
         while(true){
             packer.Unpack(comm.Receive());
             System.out.println(packer.toString());
@@ -37,9 +38,30 @@ public class Main {
                 comm.Send(packer.Ack((long)0));
                 break;
             }
-            fs.toFile(packer.getBuffer());
-            fs.getNextSeg();
-            comm.Send(packer.Ack(fs.getNextSeg()));
+            else if(packer.getCommand() == 1){
+                comm.Send(packer.Nack((long) 1, fs.getNextSeg()));
+                maxRetry++;;
+            }
+            else if(packer.getOpCode() > fs.getNextSeg()){
+                comm.Send(packer.Nack(2, fs.getNextSeg()));
+                maxRetry++;
+                if(maxRetry == 3){
+                    comm.Close();
+                }
+            }
+            else{
+                maxRetry = 0;
+                fs.toFile(packer.getBuffer());
+                if(prova == 3){
+                    comm.Send(packer.Ack((long)10));
+                    prova++;
+                }
+                else{
+                    fs.getNextSeg();
+                    comm.Send(packer.Ack(fs.getNextSeg()));
+                }
+                prova++;
+            }
         }
         comm.Close();
     }

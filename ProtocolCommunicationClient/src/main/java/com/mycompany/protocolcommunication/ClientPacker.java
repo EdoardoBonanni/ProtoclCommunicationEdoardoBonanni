@@ -18,7 +18,7 @@ public class ClientPacker implements Packer{
     private int Command;
     private long OpCode;
     private long Len_Buffer;
-    private byte[] Buffer;
+    private long nextSeg;
     //CheckSum array di byte
     private byte[] CheckSum;
     
@@ -112,8 +112,11 @@ public class ClientPacker implements Packer{
         byte[] LB = toBytes((String) pack.get("bufferLength"));
         this.Len_Buffer = ByteBuffer.wrap(LB).getInt() + Integer.MAX_VALUE;
         
-        String buf = (String) pack.get("buffer");
-        this.Buffer = toBytes(buf);
+        byte[] buf = toBytes((String) pack.get("buffer"));
+        if(this.Command == 5 && this.OpCode == 2)
+            this.nextSeg = ByteBuffer.wrap(buf).getLong();
+        else
+            this.nextSeg = 0;
         
         String check = (String) pack.get("checksum");
         this.CheckSum = toBytes(check);
@@ -140,8 +143,8 @@ public class ClientPacker implements Packer{
         return Len_Buffer;
     }
 
-    public byte[] getBuffer() {
-        return Buffer;
+    public long getNextSeg() {
+        return nextSeg;
     }
 
     public byte[] getCheckSum() {
@@ -153,7 +156,7 @@ public class ClientPacker implements Packer{
         String cmd = "Command: " + this.Command + "\n";
         String OC = "OpCode: " + this.OpCode + "\n";
         String lenBuff = "Lunghezza Buffer: " + this.Len_Buffer + "\n";
-        String buff = "Buffer: " + this.Buffer + "\n";
+        String buff = "NextSeg: " + this.nextSeg+ "\n";
         String chk = "CheckSum: " + this.CheckSum + "\n";
         return cmd + OC + lenBuff + buff + chk;
     }

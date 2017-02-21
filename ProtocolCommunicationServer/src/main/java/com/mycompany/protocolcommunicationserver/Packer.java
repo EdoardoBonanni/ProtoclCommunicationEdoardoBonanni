@@ -13,7 +13,7 @@ public interface Packer {
     
     public Object Ack(Object N_Seg);
     
-    public Object Nack(Object Error);
+    public Object Nack(Object Error, Object NextSeg);
     
     public void Unpack(Object packet);
 }

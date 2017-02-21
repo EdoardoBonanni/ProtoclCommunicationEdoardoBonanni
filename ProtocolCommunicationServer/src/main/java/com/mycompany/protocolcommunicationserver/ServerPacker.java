@@ -74,26 +74,30 @@ public class ServerPacker implements Packer{
         ack.put("command", toBase64(cmd));
         ack.put("opCode", toBase64(OC));
         ack.put("bufferLength", toBase64(LenBuff));
-        ack.put("buffer", "");
+        ack.put("buffer", toBase64(new byte[0]));
         ack.put("checksum", "");
         
         return ack;
     }
 
     @Override
-    public Object Nack(Object Error) {
+    public Object Nack(Object Err, Object NextSeg) {
         JSONObject nack = new JSONObject();
         
         short comm = 5 - Short.MAX_VALUE;
-        int lBuf = 0 - Integer.MAX_VALUE;
+        byte[] buffer = "".getBytes();
+        if((int)Err == 2){
+            buffer = ByteBuffer.allocate(Long.BYTES).putLong((long)NextSeg).array();
+        }
+        int lBuf = buffer.length - Integer.MAX_VALUE;
         byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
-        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt(((int)Error) - Integer.MAX_VALUE).array();
+        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt(((int)Err) - Integer.MAX_VALUE).array();
         byte[] LenBuffer = ByteBuffer.allocate(Integer.BYTES).putInt(lBuf).array();
         
         nack.put("command", toBase64(cmd));
         nack.put("opCode", toBase64(OC));
         nack.put("bufferLength", toBase64(LenBuffer));
-        nack.put("buffer", "");
+        nack.put("buffer", toBase64(buffer));
         nack.put("checksum", "");
         
         return nack;

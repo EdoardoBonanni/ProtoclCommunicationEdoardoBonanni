@@ -46,11 +46,26 @@ public class Main {
         packet = (JSONObject) comm.Receive();
         packer.Unpack(packet);
         System.out.println(packer.toString());
-        
-        while(packer.getOpCode() <= build.getTotSeg()){
-            packet = (JSONObject) packer.Send(packer.getOpCode(), build.Build(packer.getOpCode(), selectedFile));
+        boolean reSend = false;
+        while(packer.getOpCode() <= build.getTotSeg() && packer.getCommand() == 4){
+            if(reSend){
+                packet = (JSONObject) packer.Send(packer.getNextSeg(), build.Build(packer.getNextSeg(), selectedFile));
+            }
+            else{
+                packet = (JSONObject) packer.Send(packer.getOpCode(), build.Build(packer.getOpCode(), selectedFile));
+            }
             comm.Send(packet);
             packer.Unpack(comm.Receive());
+            
+            if(packer.getCommand() == 5 && packer.getOpCode() == 2){
+                reSend = true;
+            }
+            else if(packer.getCommand() == 5 && packer.getOpCode() == 1){
+                reSend = true;
+            }
+            else{
+                reSend = false;
+            }
             System.out.println(packer.toString());
         }
         comm.Send(packer.End(1));

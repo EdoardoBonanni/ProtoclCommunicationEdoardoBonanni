@@ -16,9 +16,14 @@ import org.json.simple.JSONObject;
  */
 public class Main {
 
-    /**
-     * @param args the command line arguments
-     */
+    public static final byte checkSum(byte[] bytes) {
+        byte sum = 0;
+        for (byte b : bytes) {
+           sum ^= b;
+        }
+        return sum;
+    }
+    
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         String userDir = System.getProperty("user.home");
         JFileChooser fc = new JFileChooser(new File(userDir + "/Desktop"));
@@ -47,7 +52,7 @@ public class Main {
         packer.Unpack(packet);
         System.out.println(packer.toString());
         boolean reSend = false;
-        while(packer.getOpCode() <= build.getTotSeg() && packer.getCommand() == 4){
+        while(packer.getOpCode() <= build.getTotSeg() && (packer.getCommand().equals("A")  || packer.getCommand().equals("N"))){
             if(reSend){
                 packet = (JSONObject) packer.Send(packer.getNextSeg(), build.Build(packer.getNextSeg(), selectedFile));
             }
@@ -57,11 +62,14 @@ public class Main {
             comm.Send(packet);
             packer.Unpack(comm.Receive());
             
-            if(packer.getCommand() == 5 && packer.getOpCode() == 2){
+            if(packer.getCommand().equals("N") && packer.getOpCode() == 2){
                 reSend = true;
             }
-            else if(packer.getCommand() == 5 && packer.getOpCode() == 1){
+            else if(packer.getCommand().equals("N") && packer.getOpCode() == 1){
                 reSend = true;
+            }
+            else if(packer.getCommand().equals("N") && packer.getOpCode() == 3){
+                comm.Close();
             }
             else{
                 reSend = false;

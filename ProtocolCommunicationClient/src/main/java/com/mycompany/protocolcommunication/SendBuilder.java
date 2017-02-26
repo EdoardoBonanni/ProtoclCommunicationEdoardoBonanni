@@ -9,9 +9,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Base64;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -22,11 +26,14 @@ public class SendBuilder {
     private byte[] buffer;
     private long TotSeg;
     private byte[] MD5;
+    private byte[] checksum;
 
+    public SendBuilder(){}
+    
     public SendBuilder(File myFile) throws IOException {
         FileInputStream fis = new FileInputStream(myFile);
         byte[] buff = new byte[SegmentDimension];
-        
+        fis.read(buff);
         long a = (Long)myFile.length();
         long b = a%SegmentDimension;
         if(b != 0){
@@ -38,8 +45,11 @@ public class SendBuilder {
         
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            this.MD5 = new byte[16];//md.digest(imageData);
-        } catch (NoSuchAlgorithmException ex) {}
+            this.MD5 = new byte[16];
+            this.MD5 = (byte[]) md.digest(buff);
+        } catch (NoSuchAlgorithmException ex) {
+            System.out.println("Errore MD5");
+        }
         //buffer.forEach((k,v)-> System.out.println(k + ", " + v));
     }
     
@@ -69,6 +79,10 @@ public class SendBuilder {
             return "";
         }
     }
+ 
+    private byte[] toBytes(String obj){
+        return Base64.getDecoder().decode(obj);
+    } 
     
     public long getTotSeg() {
         return TotSeg;
@@ -77,4 +91,10 @@ public class SendBuilder {
     public byte[] getMD5() {
         return MD5;
     }
+
+    public byte[] getChecksum() {
+        return checksum;
+    }
+    
+    
 }

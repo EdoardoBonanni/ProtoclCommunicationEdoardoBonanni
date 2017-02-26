@@ -5,9 +5,15 @@
  */
 package com.mycompany.protocolcommunicationserver;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Base64;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -18,7 +24,7 @@ public class ServerPacker implements Packer{
     private long TotSeg;
     private String nome_file;
     private byte[] MD5;
-    private int Command;
+    private String Command;
     private long OpCode;
     private long Len_Buffer;
     private byte[] Buffer;
@@ -31,16 +37,15 @@ public class ServerPacker implements Packer{
     public void Unpack(Object packet){
         JSONObject pack = (JSONObject) packet;
         
-        byte[] cmd = toBytes((String) pack.get("command"));
-        this.Command = ByteBuffer.wrap(cmd).getShort() + Short.MAX_VALUE;
+        this.Command = (String) pack.get("command");
         
         byte[] OC = toBytes((String) pack.get("opCode"));
-        this.OpCode = ByteBuffer.wrap(OC).getInt() + Integer.MAX_VALUE;
+        this.OpCode = ByteBuffer.wrap(OC).getInt();
        
         byte[] LB = toBytes((String) pack.get("bufferLength"));
-        this.Len_Buffer = ByteBuffer.wrap(LB).getInt() + Integer.MAX_VALUE;
+        this.Len_Buffer = ByteBuffer.wrap(LB).getInt();
         
-        if(Command != 1){
+        if(!Command.equals("U")){
             String buf = (String) pack.get("buffer");
             this.Buffer = toBytes(buf);
         }
@@ -54,28 +59,40 @@ public class ServerPacker implements Packer{
     }
 
     private void Buffer_Unpack(JSONObject packet){
-        JSONObject buffer = (JSONObject) packet.get("buffer");
+        byte[] buffer = toBytes((String) packet.get("buffer"));
         
-        this.nome_file = (String) buffer.get("fileName");
+        String s = new String(buffer);
+        JSONParser parser = new JSONParser();
+        JSONObject json = null;
+        try {
+            json = (JSONObject) parser.parse(s);
+        } catch (ParseException ex) {
+            
+        }
         
-        this.MD5 = toBytes((String) buffer.get("md5"));
+        this.nome_file = (String) json.get("fileName");
+        
+        this.MD5 = toBytes((String) json.get("md5"));
     }
     
     @Override
     public Object Ack(Object N_Seg) {
         JSONObject ack = new JSONObject();
         
-        short comm = 4 - Short.MAX_VALUE;
-        int lBuf = 0 - Integer.MAX_VALUE;
-        byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
-        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt((int) ((long)N_Seg - Integer.MAX_VALUE)).array();
+        int lBuf = 0;
+        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt((int) ((long)N_Seg)).array();
         byte[] LenBuff = ByteBuffer.allocate(Integer.BYTES).putInt(lBuf).array();
         
-        ack.put("command", toBase64(cmd));
+        ack.put("command", "A");
+        byte[] cmd = "A".getBytes();
         ack.put("opCode", toBase64(OC));
         ack.put("bufferLength", toBase64(LenBuff));
-        ack.put("buffer", toBase64(new byte[0]));
-        ack.put("checksum", "");
+        byte[] buffer = new byte[0];
+        ack.put("buffer", toBase64(buffer));
+        byte[] pack = this.GenerateArrayByte(cmd, OC, LenBuff, buffer);
+        byte bytechk = Main.checkSum(pack);
+        byte[] chk = {bytechk};
+        ack.put("checksum", toBase64(chk));
         
         return ack;
     }
@@ -84,21 +101,23 @@ public class ServerPacker implements Packer{
     public Object Nack(Object Err, Object NextSeg) {
         JSONObject nack = new JSONObject();
         
-        short comm = 5 - Short.MAX_VALUE;
         byte[] buffer = "".getBytes();
         if((int)Err == 2){
             buffer = ByteBuffer.allocate(Long.BYTES).putLong((long)NextSeg).array();
         }
-        int lBuf = buffer.length - Integer.MAX_VALUE;
-        byte[] cmd = ByteBuffer.allocate(Short.BYTES).putShort(comm).array();
-        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt(((int)Err) - Integer.MAX_VALUE).array();
+        int lBuf = buffer.length ;
+        byte[] OC = ByteBuffer.allocate(Integer.BYTES).putInt(((int)Err)).array();
         byte[] LenBuffer = ByteBuffer.allocate(Integer.BYTES).putInt(lBuf).array();
         
-        nack.put("command", toBase64(cmd));
+        nack.put("command", "N");
+        byte[] cmd = "N".getBytes();
         nack.put("opCode", toBase64(OC));
         nack.put("bufferLength", toBase64(LenBuffer));
         nack.put("buffer", toBase64(buffer));
-        nack.put("checksum", "");
+        byte[] pack = this.GenerateArrayByte(cmd, OC, LenBuffer, buffer);
+        byte bytechk = Main.checkSum(pack);
+        byte[] chk = {bytechk};
+        nack.put("checksum", toBase64(chk));
         
         return nack;
     }
@@ -111,7 +130,18 @@ public class ServerPacker implements Packer{
         return Base64.getDecoder().decode(obj);
     } 
     
-    public int getCommand() {
+    private byte[] GenerateArrayByte(byte[] cmd, byte[] opCode, byte[] LenSeg, byte[] buffByte){
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(cmd);
+            outputStream.write(opCode);
+            outputStream.write(LenSeg);
+            outputStream.write(buffByte);
+        } catch (IOException ex) { }
+        return outputStream.toByteArray();
+    } 
+    
+    public String getCommand() {
         return this.Command;
     }
 
@@ -149,7 +179,7 @@ public class ServerPacker implements Packer{
         String OC = "OpCode: " + this.OpCode + "\n";
         String lenBuff = "Lunghezza Buffer: " + this.Len_Buffer + "\n";
         String buff = "";
-        if(this.Command != 1){
+        if(!this.Command.equals("U")){
             buff = "Buffer: " + this.Buffer + "\n";
         }
         else{

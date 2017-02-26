@@ -10,13 +10,18 @@ import org.json.simple.JSONObject;
 
 /**
  *
- * @author studente
+ * @author Edoardo
  */
 public class Main {
 
-    /**
-     * @param args the command line arguments
-     */
+    public static final byte checkSum(byte[] bytes) {
+        byte sum = 0;
+        for (byte b : bytes) {
+           sum ^= b;
+        }
+        return sum;
+    }
+    
     public static void main(String[] args) throws IOException {
         SocketServer comm = new SocketServer(6789);
         comm.Connect();
@@ -30,15 +35,15 @@ public class Main {
         
         comm.Send(packer.Ack(fs.getNextSeg()));
         int maxRetry = 0;
-        int prova =0;
+        //int prova =0;
         while(true){
             packer.Unpack(comm.Receive());
             System.out.println(packer.toString());
-            if(packer.getCommand() == 3){
+            if(packer.getCommand().equals("E")){
                 comm.Send(packer.Ack((long)0));
                 break;
             }
-            else if(packer.getCommand() == 1){
+            else if(packer.getCommand().equals("U")){
                 comm.Send(packer.Nack((long) 1, fs.getNextSeg()));
                 maxRetry++;;
             }
@@ -46,21 +51,23 @@ public class Main {
                 comm.Send(packer.Nack(2, fs.getNextSeg()));
                 maxRetry++;
                 if(maxRetry == 3){
+                    comm.Send(packer.Nack((long) 3,(long) 0));
                     comm.Close();
                 }
             }
             else{
                 maxRetry = 0;
                 fs.toFile(packer.getBuffer());
+                /*
                 if(prova == 3){
                     comm.Send(packer.Ack((long)10));
                     prova++;
                 }
-                else{
-                    fs.getNextSeg();
-                    comm.Send(packer.Ack(fs.getNextSeg()));
-                }
-                prova++;
+                else{*/
+                fs.getNextSeg();
+                comm.Send(packer.Ack(fs.getNextSeg()));
+                /*}
+                prova++;*/
             }
         }
         comm.Close();

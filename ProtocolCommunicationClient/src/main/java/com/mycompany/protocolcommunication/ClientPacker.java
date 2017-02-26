@@ -58,7 +58,7 @@ public class ClientPacker implements Packer{
         upload.put("bufferLength", toBase64(LenSeg));
         upload.put("buffer", toBase64(buffByte));
         
-        byte[] pack = this.GenerateArrayByte(cmd, TotSeg, LenSeg, buffByte);
+        byte[] pack = Main.GenerateArrayByte(cmd, TotSeg, LenSeg, buffByte);
         byte bytechk = Main.checkSum(pack);
         byte[] chk = {bytechk};
         upload.put("checksum", toBase64(chk));
@@ -81,7 +81,7 @@ public class ClientPacker implements Packer{
         send.put("bufferLength", toBase64(LenBuff));
         send.put("buffer", toBase64((byte[]) buffer));
         
-        byte[] pack = this.GenerateArrayByte(cmd, OC, LenBuff, (byte[]) buffer);
+        byte[] pack = Main.GenerateArrayByte(cmd, OC, LenBuff, (byte[]) buffer);
         byte bytechk = Main.checkSum(pack);
         byte[] chk = {bytechk};
         send.put("checksum", toBase64(chk));
@@ -103,7 +103,7 @@ public class ClientPacker implements Packer{
         end.put("bufferLength", toBase64(LenBuff));
         end.put("buffer", "");
         byte[] buffer = new byte[0];
-        byte[] pack = this.GenerateArrayByte(cmd, OC, LenBuff, buffer);
+        byte[] pack = Main.GenerateArrayByte(cmd, OC, LenBuff, buffer);
         byte bytechk = Main.checkSum(pack);
         byte[] chk = {bytechk};
         end.put("checksum", toBase64(chk));
@@ -139,18 +139,7 @@ public class ClientPacker implements Packer{
     
     private byte[] toBytes(String obj){
         return Base64.getDecoder().decode(obj);
-    } 
-    
-    private byte[] GenerateArrayByte(byte[] cmd, byte[] opCode, byte[] LenSeg, byte[] buffByte){
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            outputStream.write(cmd);
-            outputStream.write(opCode);
-            outputStream.write(LenSeg);
-            outputStream.write(buffByte);
-        } catch (IOException ex) { }
-        return outputStream.toByteArray();
-    }    
+    }   
     
     public String getCommand() {
         return Command;

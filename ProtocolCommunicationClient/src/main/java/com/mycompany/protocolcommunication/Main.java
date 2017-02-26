@@ -5,6 +5,7 @@
  */
 package com.mycompany.protocolcommunication;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.*;
@@ -22,6 +23,17 @@ public class Main {
            sum ^= b;
         }
         return sum;
+    }
+    
+    public static byte[] GenerateArrayByte(byte[] cmd, byte[] opCode, byte[] LenSeg, byte[] buffByte){
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputStream.write(cmd);
+            outputStream.write(opCode);
+            outputStream.write(LenSeg);
+            outputStream.write(buffByte);
+        } catch (IOException ex) { }
+        return outputStream.toByteArray();
     }
     
     public static void main(String[] args) throws IOException, ClassNotFoundException {

@@ -37,6 +37,7 @@ public class ServerPacker implements Packer{
     public void Unpack(Object packet){
         JSONObject pack = (JSONObject) packet;
         
+        //byte[] cmd = toBytes((String) pack.get("command"));
         this.Command = (String) pack.get("command");
         
         byte[] OC = toBytes((String) pack.get("opCode"));
@@ -66,9 +67,7 @@ public class ServerPacker implements Packer{
         JSONObject json = null;
         try {
             json = (JSONObject) parser.parse(s);
-        } catch (ParseException ex) {
-            
-        }
+        } catch (ParseException ex) { }
         
         this.nome_file = (String) json.get("fileName");
         
@@ -89,7 +88,8 @@ public class ServerPacker implements Packer{
         ack.put("bufferLength", toBase64(LenBuff));
         byte[] buffer = new byte[0];
         ack.put("buffer", toBase64(buffer));
-        byte[] pack = this.GenerateArrayByte(cmd, OC, LenBuff, buffer);
+        byte[] pack = 
+                Main.GenerateArrayByte(cmd, OC, LenBuff, buffer);
         byte bytechk = Main.checkSum(pack);
         byte[] chk = {bytechk};
         ack.put("checksum", toBase64(chk));
@@ -114,7 +114,7 @@ public class ServerPacker implements Packer{
         nack.put("opCode", toBase64(OC));
         nack.put("bufferLength", toBase64(LenBuffer));
         nack.put("buffer", toBase64(buffer));
-        byte[] pack = this.GenerateArrayByte(cmd, OC, LenBuffer, buffer);
+        byte[] pack = Main.GenerateArrayByte(cmd, OC, LenBuffer, buffer);
         byte bytechk = Main.checkSum(pack);
         byte[] chk = {bytechk};
         nack.put("checksum", toBase64(chk));
@@ -128,17 +128,6 @@ public class ServerPacker implements Packer{
     
     private byte[] toBytes(String obj){
         return Base64.getDecoder().decode(obj);
-    } 
-    
-    private byte[] GenerateArrayByte(byte[] cmd, byte[] opCode, byte[] LenSeg, byte[] buffByte){
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            outputStream.write(cmd);
-            outputStream.write(opCode);
-            outputStream.write(LenSeg);
-            outputStream.write(buffByte);
-        } catch (IOException ex) { }
-        return outputStream.toByteArray();
     } 
     
     public String getCommand() {

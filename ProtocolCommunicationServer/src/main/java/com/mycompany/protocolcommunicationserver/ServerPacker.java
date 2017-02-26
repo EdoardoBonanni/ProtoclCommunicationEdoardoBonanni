@@ -5,12 +5,9 @@
  */
 package com.mycompany.protocolcommunicationserver;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Base64;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -37,7 +34,7 @@ public class ServerPacker implements Packer{
     public void Unpack(Object packet){
         JSONObject pack = (JSONObject) packet;
         
-        //byte[] cmd = toBytes((String) pack.get("command"));
+        byte[] cmd = ((String) pack.get("command")).getBytes();
         this.Command = (String) pack.get("command");
         
         byte[] OC = toBytes((String) pack.get("opCode"));
@@ -53,16 +50,24 @@ public class ServerPacker implements Packer{
         else{
             Buffer_Unpack(pack);
         }
+        byte[] bytePack = Main.GenerateArrayByte(cmd, OC, LB, this.Buffer);
+        byte bytechk = Main.checkSum(bytePack);
+        byte[] chk = {bytechk};
         
         String check = (String) pack.get("checksum");
-        this.CheckSum = toBytes(check);
-
+        byte[] chkPacket = toBytes(check);
+        if(Arrays.equals(chk, chkPacket)){
+            this.CheckSum = chkPacket;
+        }
+        else{
+            this.CheckSum = new byte[0];
+        }
     }
 
     private void Buffer_Unpack(JSONObject packet){
-        byte[] buffer = toBytes((String) packet.get("buffer"));
+        this.Buffer = toBytes((String) packet.get("buffer"));
         
-        String s = new String(buffer);
+        String s = new String(this.Buffer);
         JSONParser parser = new JSONParser();
         JSONObject json = null;
         try {
@@ -72,6 +77,8 @@ public class ServerPacker implements Packer{
         this.nome_file = (String) json.get("fileName");
         
         this.MD5 = toBytes((String) json.get("md5"));
+        
+        
     }
     
     @Override

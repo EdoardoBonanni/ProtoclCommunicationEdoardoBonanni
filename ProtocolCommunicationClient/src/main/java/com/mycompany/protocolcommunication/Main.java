@@ -8,6 +8,7 @@ package com.mycompany.protocolcommunication;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import javax.swing.*;
 import org.json.simple.JSONObject;
 
@@ -64,6 +65,8 @@ public class Main {
         packer.Unpack(packet);
         System.out.println(packer.toString());
         boolean reSend = false;
+        byte[] chk = new byte[0];
+        boolean packetError = false;
         while(packer.getOpCode() <= build.getTotSeg() && (packer.getCommand().equals("A")  || packer.getCommand().equals("N"))){
             if(reSend){
                 packet = (JSONObject) packer.Send(packer.getNextSeg(), build.Build(packer.getNextSeg(), selectedFile));
@@ -72,8 +75,14 @@ public class Main {
                 packet = (JSONObject) packer.Send(packer.getOpCode(), build.Build(packer.getOpCode(), selectedFile));
             }
             comm.Send(packet);
-            packer.Unpack(comm.Receive());
-            
+            try{
+                packer.Unpack(comm.Receive());
+            }catch(Exception ex){
+                comm.Close();
+            }
+            if(Arrays.equals(packer.getCheckSum(), chk)){
+                comm.Close();
+            }
             if(packer.getCommand().equals("N") && packer.getOpCode() == 2){
                 reSend = true;
             }

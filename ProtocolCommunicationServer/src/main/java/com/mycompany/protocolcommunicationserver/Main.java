@@ -8,7 +8,7 @@ package com.mycompany.protocolcommunicationserver;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import org.json.simple.JSONObject;
+import java.util.Arrays;
 
 /**
  *
@@ -47,11 +47,16 @@ public class Main {
 
         ServerPacker packer = new ServerPacker();
         
-        //try{
+        try{
             packer.Unpack(comm.Receive());
-        /*}catch(Exception ex){
+        }catch(Exception ex){
             comm.Send(packer.Nack((long) 10, (long) 0));
-        }*/
+        }
+        byte[] chk = new byte[0];
+        if(Arrays.equals(packer.getCheckSum(), chk)){
+            comm.Send(packer.Nack((long) 6, (long) 0));
+            comm.Close();
+        }
         System.out.println(packer.toString());
         int totseg = ((Long) packer.getOpCode()).intValue();
         if((totseg * 2048) > f.getFreeSpace()){
@@ -80,7 +85,10 @@ public class Main {
                 comm.Send(packer.Nack((long) 10, fs.getNextSeg()));
             }
             else{
-                
+                if(Arrays.equals(packer.getCheckSum(), chk)){
+                    comm.Send(packer.Nack((long) 6, (long) 0));
+                    comm.Close();
+                }
                 System.out.println(packer.toString());
                 if(packer.getCommand().equals("E")){
                     comm.Send(packer.Ack((long)0));

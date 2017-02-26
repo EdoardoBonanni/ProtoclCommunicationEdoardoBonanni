@@ -5,14 +5,9 @@
  */
 package com.mycompany.protocolcommunication;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import static java.lang.Integer.toHexString;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Base64;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.simple.JSONObject;
 
 /**
@@ -114,6 +109,7 @@ public class ClientPacker implements Packer{
     public void Unpack(Object packet) {
         JSONObject pack = (JSONObject) packet;
         
+        byte[] cmd = ((String) pack.get("command")).getBytes();
         this.Command = (String) pack.get("command");
         
         byte[] OC = toBytes((String) pack.get("opCode"));
@@ -128,8 +124,18 @@ public class ClientPacker implements Packer{
         else
             this.nextSeg = 0;
         
+        byte[] bytePack = Main.GenerateArrayByte(cmd, OC, LB, buf);
+        byte bytechk = Main.checkSum(bytePack);
+        byte[] chk = {bytechk};
+        
         String check = (String) pack.get("checksum");
-        this.CheckSum = toBytes(check);
+        byte[] chkPacket = toBytes(check);
+        if(Arrays.equals(chk, chkPacket)){
+            this.CheckSum = chkPacket;
+        }
+        else{
+            this.CheckSum = new byte[0];
+        }
         
     }
 

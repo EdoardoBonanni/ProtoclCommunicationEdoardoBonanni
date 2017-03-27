@@ -6,7 +6,7 @@
 package com.mycompany.protocolcommunicationserver;
 
 /**
- *
+ * L'interfaccia utilizzata per definire le operazioni sul pacchetto disponibili al Server
  * @author Edoardo
  */
 public interface Packer {

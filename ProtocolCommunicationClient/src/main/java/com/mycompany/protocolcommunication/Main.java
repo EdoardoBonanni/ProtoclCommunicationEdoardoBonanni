@@ -17,14 +17,6 @@ import org.json.simple.JSONObject;
  * @author Edoardo
  */
 public class Main {
-
-    public static final byte checkSum(byte[] bytes) {
-        byte sum = 0;
-        for (byte b : bytes) {
-           sum ^= b;
-        }
-        return sum;
-    }
     
     public static byte[] GenerateArrayByte(byte[] cmd, byte[] opCode, byte[] LenSeg, byte[] buffByte){
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

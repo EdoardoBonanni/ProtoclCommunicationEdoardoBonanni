@@ -6,8 +6,8 @@
 package com.mycompany.protocolcommunicationserver;
 
 /**
- *
- * @author studente
+ * L'interfaccia utilizzata per la comunicazione
+ * @author Edoardo
  */
 public interface Communication {
     

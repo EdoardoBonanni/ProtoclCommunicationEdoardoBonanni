@@ -54,7 +54,7 @@ public class ClientPacker implements Packer{
         upload.put("buffer", toBase64(buffByte));
         
         byte[] pack = Main.GenerateArrayByte(cmd, TotSeg, LenSeg, buffByte);
-        byte bytechk = Main.checkSum(pack);
+        byte bytechk = this.CreateCheckSum(pack);
         byte[] chk = {bytechk};
         upload.put("checksum", toBase64(chk));
         
@@ -77,7 +77,7 @@ public class ClientPacker implements Packer{
         send.put("buffer", toBase64((byte[]) buffer));
         
         byte[] pack = Main.GenerateArrayByte(cmd, OC, LenBuff, (byte[]) buffer);
-        byte bytechk = Main.checkSum(pack);
+        byte bytechk = this.CreateCheckSum(pack);
         byte[] chk = {bytechk};
         send.put("checksum", toBase64(chk));
         
@@ -99,7 +99,7 @@ public class ClientPacker implements Packer{
         end.put("buffer", "");
         byte[] buffer = new byte[0];
         byte[] pack = Main.GenerateArrayByte(cmd, OC, LenBuff, buffer);
-        byte bytechk = Main.checkSum(pack);
+        byte bytechk = this.CreateCheckSum(pack);
         byte[] chk = {bytechk};
         end.put("checksum", toBase64(chk));
         return end;
@@ -125,7 +125,7 @@ public class ClientPacker implements Packer{
             this.nextSeg = 0;
         
         byte[] bytePack = Main.GenerateArrayByte(cmd, OC, LB, buf);
-        byte bytechk = Main.checkSum(bytePack);
+        byte bytechk = this.CreateCheckSum(bytePack);
         byte[] chk = {bytechk};
         
         String check = (String) pack.get("checksum");
@@ -165,6 +165,15 @@ public class ClientPacker implements Packer{
 
     public byte[] getCheckSum() {
         return CheckSum;
+    }
+    
+    
+    public byte CreateCheckSum(byte[] bytes) {
+        byte sum = 0;
+        for (byte b : bytes) {
+           sum ^= b;
+        }
+        return sum;
     }
     
     @Override

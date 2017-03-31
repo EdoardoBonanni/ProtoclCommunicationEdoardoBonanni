@@ -36,7 +36,7 @@ public class SocketServer implements Communication {
     
     /**
      * Il metodo implementato dall'interfaccia communication che gestisce l'apertura della connessione da parte del Server
-     * @return 
+     * @return Il risultato dell'apertura della connessione col Server
      */
     @Override
     public boolean Connect() {
@@ -75,7 +75,7 @@ public class SocketServer implements Communication {
         try {
             //oggetto che serve per fare il parse di un JSONObject
             JSONParser jsonParser = new JSONParser();
-            //assegna il JSONObject ricevuto dal Client ad un altro oggetto JSONObject
+            //assegna il JSONObject ricevuto dal Client ad un altro oggetto JSONObject per il successivo invio
             JSONObject ClientJsonObject = (JSONObject) jsonParser.parse(inFromClient.readLine());
             return ClientJsonObject;
         } catch (Exception ex) {
@@ -98,6 +98,10 @@ public class SocketServer implements Communication {
         }
     }
 
+    /**
+     * il metodo che restituisce il valore del campo ConnectionSocket
+     * @return Il valore del campo ConnectionSocket
+     */
     public Socket getConnectionSocket() {
         return connectionSocket;
     }

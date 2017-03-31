@@ -63,6 +63,7 @@ public class ServerPacker implements Packer{
             //se si tratta di un Upload chiama la seguente funzione
             Buffer_Unpack(pack);
         }
+        
         //l'array di byte contente la somma di tutti i byte del pacchetto(escluso il byte del checksum)
         byte[] bytePack = this.GenerateArrayByte(cmd, OC, LB, this.Buffer);
         //Il byte che rappresenta il checksum del pacchetto
@@ -127,6 +128,8 @@ public class ServerPacker implements Packer{
         ack.put("bufferLength", toBase64(LenBuff));
         byte[] buffer = new byte[0];
         ack.put("buffer", toBase64(buffer));
+        
+        //Viene calcolato il checksum del pacchetto da inviare
         byte[] pack = this.GenerateArrayByte(cmd, OC, LenBuff, buffer);
         byte bytechk = this.CreateCheckSum(pack);
         byte[] chk = {bytechk};
@@ -160,6 +163,8 @@ public class ServerPacker implements Packer{
         nack.put("opCode", toBase64(OC));
         nack.put("bufferLength", toBase64(LenBuffer));
         nack.put("buffer", toBase64(buffer));
+        
+        //Viene calcolato il checksum del pacchetto da inviare
         byte[] pack = this.GenerateArrayByte(cmd, OC, LenBuffer, buffer);
         byte bytechk = this.CreateCheckSum(pack);
         byte[] chk = {bytechk};
@@ -186,40 +191,72 @@ public class ServerPacker implements Packer{
         return Base64.getDecoder().decode(obj);
     } 
     
+    /**
+     * il metodo che restituisce il valore del campo Command
+     * @return Il valore del campo Command
+     */
     public String getCommand() {
         return this.Command;
     }
 
+    /**
+     * il metodo che restituisce il valore del campo OpCode
+     * @return Il valore del campo OpCode
+     */
     public long getOpCode() {
         return this.OpCode;
     }
 
+    /**
+     * il metodo che restituisce il valore del campo LenBuffer
+     * @return Il valore del campo LenBuffer
+     */
     public long getLen_Buffer() {
         return this.Len_Buffer;
     }
 
+    /**
+     * il metodo che restituisce il valore del campo Buffer
+     * @return Il valore del campo Buffer
+     */
     public byte[] getBuffer() {
         return this.Buffer;
     }
 
+    /**
+     * il metodo che restituisce il valore del campo Checksum
+     * @return Il valore del campo Checksum
+     */
     public byte[] getCheckSum() {
         return this.CheckSum;
     }
 
+    /**
+     * il metodo che restituisce il numero di segmenti totali
+     * @return Il numero di segmenti totali
+     */
     public long getTotSeg() {
         return this.TotSeg;
     }
 
+    /**
+     * il metodo che restituisce il valore del campo nomefile
+     * @return Il valore del camponomefile
+     */
     public String getNome_file() {
         return this.nome_file;
     }
 
+    /**
+     * il metodo che restituisce il valore del campo MD5
+     * @return Il valore del campo MD5
+     */
     public byte[] getMD5() {
         return this.MD5;
     }
     
     /**
-     * funzione che genera l'array di byte contenetente la somma dei byte dei campi del pacchetto(escluso il campo checksum)
+     * funzione che genera l'array di byte contenente la somma dei byte dei campi del pacchetto(escluso il campo checksum)
      * @param cmd i byte del campo command
      * @param opCode i byte del campo opcode
      * @param LenSeg i byte del campo LenBuffer

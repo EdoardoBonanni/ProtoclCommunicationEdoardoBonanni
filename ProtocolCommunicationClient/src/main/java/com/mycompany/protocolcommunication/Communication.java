@@ -6,7 +6,7 @@
 package com.mycompany.protocolcommunication;
 
 /**
- *
+ * L'interfaccia utilizzata per la comunicazione
  * @author Edoardo
  */
 public interface Communication {

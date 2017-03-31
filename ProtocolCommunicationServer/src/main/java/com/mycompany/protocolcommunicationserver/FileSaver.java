@@ -7,7 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * La classe che permette di salvare il file ricevuto dal Client
  * @author Edoardo
  */
 public class FileSaver {

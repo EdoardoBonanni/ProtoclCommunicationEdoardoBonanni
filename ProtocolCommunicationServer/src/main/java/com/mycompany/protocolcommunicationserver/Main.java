@@ -71,7 +71,7 @@ public class Main {
             comm.Close();
         }
         
-        //viene inizializzato un oggetto filesaver che permetter di salvare il file con il nome specificato
+        //viene inizializzato un oggetto filesaver che permette di salvare il file con il nome specificato
         FileSaver fs = new FileSaver(packer.getNome_file());
         
         /* se tutti i passaggi precedenti sono andati a buon fine il server invia un ack
